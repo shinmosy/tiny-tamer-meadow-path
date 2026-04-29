@@ -24,12 +24,20 @@ func button_style(bg: Color = PAPER_DARK, border: Color = GREEN_DARK) -> StyleBo
 	sb.shadow_size = 3
 	return sb
 
-func type_color(t: String) -> Color:
-	match t:
-		"Meadow": return Color("#7cc96f")
-		"Forest": return Color("#3f7f4c")
-		"Water": return Color("#5aaee8")
-		"Stone": return Color("#978974")
-		"Bloom": return Color("#df72b5")
-		"Ember": return Color("#e0773e")
-		_: return Color("#c6b48a")
+func type_color(type: String) -> Color:
+	match type:
+		"Meadow": return Color("#33b6ac")
+		"Forest": return Color("#4f8d55")
+		"Water": return Color("#3a9ad8")
+		"Stone": return Color("#8a7c6b")
+		"Bloom": return Color("#d86c94")
+		"Ember": return Color("#d86b3a")
+		"Fire": return Color("#e25822")
+		"Electric": return Color("#f2ca35")
+		"Air": return Color("#8ec9db")
+		"Sound": return Color("#a65cd9")
+		"Ghost": return Color("#533c75")
+		"Light": return Color("#f9e984")
+		"Shadow": return Color("#2c2b3d")
+		"Tech": return Color("#5c6875")
+		_: return Color("#33b6ac")

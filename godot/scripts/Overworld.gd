@@ -138,11 +138,12 @@ func _build_npcs() -> void:
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new(); layer.layer = 8; add_child(layer)
-	var panel := Panel.new(); panel.position=Vector2(18,16); panel.size=Vector2(410,112); panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff3d7", .93), Color("#2f5d35"), 16)); layer.add_child(panel)
-	biome_badge = Label.new(); biome_badge.position=Vector2(20,12); biome_badge.size=Vector2(370,24); biome_badge.add_theme_font_size_override("font_size",18); biome_badge.add_theme_color_override("font_color", UITheme.INK); panel.add_child(biome_badge)
-	hud_status = Label.new(); hud_status.position=Vector2(20,40); hud_status.size=Vector2(370,24); hud_status.add_theme_font_size_override("font_size",16); hud_status.add_theme_color_override("font_color", Color("#456145")); panel.add_child(hud_status)
-	hud_quest = Label.new(); hud_quest.position=Vector2(20,66); hud_quest.size=Vector2(370,38); hud_quest.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; hud_quest.add_theme_font_size_override("font_size",14); hud_quest.add_theme_color_override("font_color", Color("#5e4728")); panel.add_child(hud_quest)
-	toast_label = Label.new(); toast_label.position=Vector2(260, 470); toast_label.size=Vector2(440, 36); toast_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; toast_label.add_theme_font_size_override("font_size",18); toast_label.add_theme_color_override("font_color", Color("#fff5d8")); layer.add_child(toast_label)
+	var panel := Panel.new(); panel.position=Vector2(18,16); panel.size=Vector2(410,112); panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#071c35", .93), Color("#71f7ff"), 16)); layer.add_child(panel)
+	var glow := ColorRect.new(); glow.color = Color("#71f7ff", 0.4); glow.position = Vector2(0, 110); glow.size = Vector2(410, 2); panel.add_child(glow)
+	biome_badge = Label.new(); biome_badge.position=Vector2(20,12); biome_badge.size=Vector2(370,24); biome_badge.add_theme_font_size_override("font_size",18); biome_badge.add_theme_color_override("font_color", Color("#ffffff")); panel.add_child(biome_badge)
+	hud_status = Label.new(); hud_status.position=Vector2(20,40); hud_status.size=Vector2(370,24); hud_status.add_theme_font_size_override("font_size",16); hud_status.add_theme_color_override("font_color", Color("#71f7ff")); panel.add_child(hud_status)
+	hud_quest = Label.new(); hud_quest.position=Vector2(20,66); hud_quest.size=Vector2(370,38); hud_quest.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; hud_quest.add_theme_font_size_override("font_size",14); hud_quest.add_theme_color_override("font_color", Color("#a9c2cf")); panel.add_child(hud_quest)
+	toast_label = Label.new(); toast_label.position=Vector2(260, 470); toast_label.size=Vector2(440, 36); toast_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; toast_label.add_theme_font_size_override("font_size",18); toast_label.add_theme_color_override("font_color", Color("#71f7ff")); toast_label.add_theme_color_override("font_shadow_color", Color("#092437")); layer.add_child(toast_label)
 
 func _update_hud() -> void:
 	biome_badge.text = "Route: %s" % GameState.current_biome

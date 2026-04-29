@@ -42,19 +42,20 @@ func _build_battle() -> void:
 	enemy_mon = TextureRect.new(); enemy_mon.texture = load(GameState.enemy_sprite); enemy_mon.position=Vector2(635,65); enemy_mon.size=Vector2(175,175); enemy_mon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED; add_child(enemy_mon)
 	_start_idle(player_mon, 7, 1.2); _start_idle(enemy_mon, -6, 1.15)
 
-	var log_panel := Panel.new(); log_panel.position=Vector2(28,410); log_panel.size=Vector2(555,108); log_panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff1cf", .96), Color("#2f5d35"), 16)); add_child(log_panel)
-	battle_log = Label.new(); battle_log.position=Vector2(18,16); battle_log.size=Vector2(518,76); battle_log.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; battle_log.add_theme_font_size_override("font_size",19); battle_log.add_theme_color_override("font_color", UITheme.INK); log_panel.add_child(battle_log)
+	var log_panel := Panel.new(); log_panel.position=Vector2(28,410); log_panel.size=Vector2(555,108); log_panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#071c35", .96), Color("#71f7ff"), 16)); add_child(log_panel)
+	battle_log = Label.new(); battle_log.position=Vector2(18,16); battle_log.size=Vector2(518,76); battle_log.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; battle_log.add_theme_font_size_override("font_size",19); battle_log.add_theme_color_override("font_color", Color("#ffffff")); log_panel.add_child(battle_log)
 
-	var menu_panel := Panel.new(); menu_panel.position=Vector2(610,410); menu_panel.size=Vector2(320,108); menu_panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff6da", .96), Color("#2f5d35"), 16)); add_child(menu_panel)
+	var menu_panel := Panel.new(); menu_panel.position=Vector2(610,410); menu_panel.size=Vector2(320,108); menu_panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#071c35", .96), Color("#71f7ff"), 16)); add_child(menu_panel)
 	command_box = VBoxContainer.new(); command_box.position=Vector2(18,12); command_box.size=Vector2(135,86); command_box.add_theme_constant_override("separation", 6); menu_panel.add_child(command_box)
 	submenu_box = VBoxContainer.new(); submenu_box.position=Vector2(165,12); submenu_box.size=Vector2(135,86); submenu_box.add_theme_constant_override("separation", 6); menu_panel.add_child(submenu_box)
 	_show_commands()
 
 func _status_card(pos: Vector2, enemy: bool) -> Panel:
-	var p := Panel.new(); p.position=pos; p.size=Vector2(335,90); p.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff2cf", .95), Color("#24452d"), 16))
-	var info := Label.new(); info.position=Vector2(16,10); info.size=Vector2(300,26); info.add_theme_font_size_override("font_size",18); info.add_theme_color_override("font_color", UITheme.INK); p.add_child(info)
+	var p := Panel.new(); p.position=pos; p.size=Vector2(335,90); p.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#0b2b4d", .95), Color("#71f7ff"), 16))
+	var glow := ColorRect.new(); glow.color = Color("#71f7ff", 0.4); glow.position = Vector2(0, 88); glow.size = Vector2(335, 2); p.add_child(glow)
+	var info := Label.new(); info.position=Vector2(16,10); info.size=Vector2(300,26); info.add_theme_font_size_override("font_size",18); info.add_theme_color_override("font_color", Color("#ffffff")); p.add_child(info)
 	var bar := ProgressBar.new(); bar.position=Vector2(16,42); bar.size=Vector2(300,18); bar.show_percentage=false; p.add_child(bar)
-	var status := Label.new(); status.name="Status"; status.position=Vector2(16,63); status.size=Vector2(300,20); status.add_theme_font_size_override("font_size",13); status.add_theme_color_override("font_color", Color("#57614d")); p.add_child(status)
+	var status := Label.new(); status.name="Status"; status.position=Vector2(16,63); status.size=Vector2(300,20); status.add_theme_font_size_override("font_size",13); status.add_theme_color_override("font_color", Color("#71f7ff")); p.add_child(status)
 	if enemy:
 		enemy_info=info; enemy_hp_bar=bar
 	else:
