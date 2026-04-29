@@ -115,7 +115,7 @@ func _guard() -> void:
 	_enemy_turn()
 
 func _type_multiplier(move_type: String, target_type: String) -> float:
-	var strong := {"Meadow":"Water", "Water":"Stone", "Stone":"Bloom", "Bloom":"Forest", "Forest":"Meadow", "Ember":"Forest"}
+	var strong := {"Meadow":"Water", "Water":"Fire", "Fire":"Forest", "Forest":"Electric", "Electric":"Air", "Air":"Sound", "Sound":"Ghost", "Ghost":"Light", "Light":"Shadow", "Shadow":"Tech", "Tech":"Stone", "Stone":"Water"}
 	if strong.get(move_type, "") == target_type: return 1.25
 	if strong.get(target_type, "") == move_type: return 0.8
 	return 1.0

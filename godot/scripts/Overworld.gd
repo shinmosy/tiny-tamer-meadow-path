@@ -56,14 +56,14 @@ func _spawn_player() -> void:
 	player.add_child(cam)
 
 func _build_world() -> void:
-	var base := ColorRect.new(); base.color = Color("#a9d98a"); base.position = Vector2.ZERO; base.size = WORLD_SIZE; add_child(base)
-	_draw_region(Rect2(80, 80, 520, 440), Color("#b9e89a"), "Meadow Camp", Vector2(170, 125))
-	_draw_region(Rect2(520, 210, 420, 360), Color("#bde486"), "Bloomtrail Path", Vector2(620, 255))
-	_draw_region(Rect2(870, 120, 420, 520), Color("#7fbd67"), "Whisperwood Gate", Vector2(930, 165))
-	_draw_region(Rect2(1160, 160, 520, 640), Color("#5f9d57"), "Whisper Forest", Vector2(1260, 210))
-	_draw_region(Rect2(1480, 710, 680, 380), Color("#8bc7d9"), "Bluebell River Crossing", Vector2(1580, 770))
-	_draw_region(Rect2(1880, 210, 500, 500), Color("#b7a37c"), "Cragpeak Foothill", Vector2(1960, 265))
-	_draw_region(Rect2(2210, 550, 250, 230), Color("#897a68"), "Cragpeak Cave Gate", Vector2(2240, 600))
+	var base := ColorRect.new(); base.color = Color("#33b6ac"); base.position = Vector2.ZERO; base.size = WORLD_SIZE; add_child(base)
+	_draw_region(Rect2(80, 80, 520, 440), Color("#57d6a8"), "MEADOW CAMP", Vector2(170, 125))
+	_draw_region(Rect2(520, 210, 420, 360), Color("#67d77c"), "BLOOMTRAIL", Vector2(620, 255))
+	_draw_region(Rect2(870, 120, 420, 520), Color("#39b973"), "WHISPER GATE", Vector2(930, 165))
+	_draw_region(Rect2(1160, 160, 520, 640), Color("#1f9f72"), "WHISPER FOREST", Vector2(1260, 210))
+	_draw_region(Rect2(1480, 710, 680, 380), Color("#28d4d9"), "BLUEBELL CROSSING", Vector2(1580, 770))
+	_draw_region(Rect2(1880, 210, 500, 500), Color("#a89470"), "CRAGPEAK", Vector2(1960, 265))
+	_draw_region(Rect2(2210, 550, 250, 230), Color("#5b5e76"), "CAVE GATE", Vector2(2240, 600))
 	_draw_path([Vector2(260,300), Vector2(560,340), Vector2(760,390), Vector2(980,360), Vector2(1260,420), Vector2(1480,660), Vector2(1720,870), Vector2(1990,650), Vector2(2290,660)])
 	_draw_river()
 	_draw_landmarks()
@@ -71,13 +71,15 @@ func _build_world() -> void:
 
 func _draw_region(rect: Rect2, color: Color, title: String, label_pos: Vector2) -> void:
 	var r := ColorRect.new(); r.color = color; r.position = rect.position; r.size = rect.size; add_child(r)
-	var l := Label.new(); l.text = title; l.position = label_pos; l.size = Vector2(330, 28); l.add_theme_font_size_override("font_size", 22); l.add_theme_color_override("font_color", Color("#203528")); add_child(l)
+	var l := Label.new(); l.text = title; l.position = label_pos; l.size = Vector2(360, 32); l.add_theme_font_size_override("font_size", 22); l.add_theme_color_override("font_color", Color("#ffffff")); l.add_theme_color_override("font_shadow_color", Color("#043448")); l.add_theme_constant_override("shadow_offset_x", 2); l.add_theme_constant_override("shadow_offset_y", 2); add_child(l)
 
 func _draw_path(points: Array) -> void:
 	for i in range(points.size() - 1):
 		var a: Vector2 = points[i]; var b: Vector2 = points[i + 1]
-		var seg := ColorRect.new(); seg.color = Color("#d8ad66"); var mid=(a+b)/2; var len=a.distance_to(b)
-		seg.position = mid - Vector2(len/2, 24); seg.size = Vector2(len, 48); seg.rotation = (b-a).angle(); add_child(seg)
+		var glow := ColorRect.new(); glow.color = Color("#64f7ff", 0.28); var mid=(a+b)/2; var len=a.distance_to(b)
+		glow.position = mid - Vector2(len/2, 34); glow.size = Vector2(len, 68); glow.rotation = (b-a).angle(); add_child(glow)
+		var seg := ColorRect.new(); seg.color = Color("#172b45", 0.86)
+		seg.position = mid - Vector2(len/2, 22); seg.size = Vector2(len, 44); seg.rotation = (b-a).angle(); add_child(seg)
 
 func _draw_river() -> void:
 	for i in range(7):
@@ -93,14 +95,16 @@ func _draw_landmarks() -> void:
 	# Camp
 	for p in [Vector2(140,360), Vector2(210,380), Vector2(330,150), Vector2(450,420)]: _sprite("res://assets/sprites/flower.svg", p, Vector2(50,50))
 	var tent := ColorRect.new(); tent.color = Color("#f2cf77"); tent.position = Vector2(185,175); tent.size = Vector2(130,85); add_child(tent)
-	var sign := Label.new(); sign.text = "Camp"; sign.position = Vector2(205, 195); sign.add_theme_font_size_override("font_size", 24); sign.add_theme_color_override("font_color", UITheme.INK); add_child(sign)
+	var sign := Label.new(); sign.text = "ROUTE SCANNER"; sign.position = Vector2(170, 195); sign.add_theme_font_size_override("font_size", 22); sign.add_theme_color_override("font_color", Color("#ffffff")); sign.add_theme_color_override("font_shadow_color", Color("#092437")); sign.add_theme_constant_override("shadow_offset_x", 2); sign.add_theme_constant_override("shadow_offset_y", 2); add_child(sign)
+	var scanner_glow := ColorRect.new(); scanner_glow.color = Color("#73f7ff", 0.25); scanner_glow.position = Vector2(222, 128); scanner_glow.size = Vector2(62, 150); add_child(scanner_glow)
+	var scanner := ColorRect.new(); scanner.color = Color("#e8fbff"); scanner.position = Vector2(235, 145); scanner.size = Vector2(38, 100); add_child(scanner)
 	# Route ornaments
 	for p in [Vector2(610,250), Vector2(690,455), Vector2(810,330), Vector2(920,480)]: _sprite("res://assets/sprites/grass_patch.svg", p, Vector2(95,75))
 	# Forest gates and dense trees
 	for p in [Vector2(880,230), Vector2(1030,230), Vector2(1160,270), Vector2(1280,260), Vector2(1410,300), Vector2(1540,360), Vector2(1220,560), Vector2(1460,610)]: _sprite("res://assets/sprites/tree.svg", p, Vector2(120,140))
-	for p in [Vector2(1340,500), Vector2(1560,520), Vector2(1190,700)]: _sprite("res://assets/sprites/gloomcap.svg", p, Vector2(54,54))
+	for p in [Vector2(1340,500), Vector2(1560,520), Vector2(1190,700)]: _sprite("res://assets/sprites/glowsprite.svg", p, Vector2(54,54))
 	# River reeds/lily hints
-	for p in [Vector2(1590,840), Vector2(1760,940), Vector2(1930,805)]: _sprite("res://assets/sprites/lilypadle.svg", p, Vector2(48,48))
+	for p in [Vector2(1590,840), Vector2(1760,940), Vector2(1930,805)]: _sprite("res://assets/sprites/karangil.svg", p, Vector2(58,58))
 	# Mountain/cave
 	for p in [Vector2(1930,355), Vector2(2070,410), Vector2(2180,300), Vector2(1970,560)]: _sprite("res://assets/sprites/mountain.svg", p, Vector2(140,120))
 	_sprite("res://assets/sprites/cave.svg", Vector2(2240,635), Vector2(170,120))
@@ -114,7 +118,8 @@ func _build_encounter_zones() -> void:
 	]
 	for z in encounter_zones:
 		var rect: Rect2 = z["rect"]
-		var grass := ColorRect.new(); grass.color = Color("#477e45", 0.28); grass.position = rect.position; grass.size = rect.size; add_child(grass)
+		var zone := ColorRect.new(); zone.color = Color("#71f7ff", 0.18); zone.position = rect.position; zone.size = rect.size; add_child(zone)
+		var inner := ColorRect.new(); inner.color = Color("#071c35", 0.16); inner.position = rect.position + Vector2(10,10); inner.size = rect.size - Vector2(20,20); add_child(inner)
 
 func _npc(name: String, role: String, pos: Vector2, color: Color) -> Dictionary:
 	var body := Node2D.new(); body.position = pos; add_child(body)
