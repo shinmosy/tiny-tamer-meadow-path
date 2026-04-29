@@ -1,74 +1,29 @@
 extends Control
 
+var sound_label: Label
+var touch_label: Label
+
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build()
 
-func _style(bg: String) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(bg)
-	sb.border_color = Color("#315a39")
-	sb.border_width_left = 3
-	sb.border_width_right = 3
-	sb.border_width_top = 3
-	sb.border_width_bottom = 5
-	sb.corner_radius_top_left = 24
-	sb.corner_radius_top_right = 24
-	sb.corner_radius_bottom_left = 24
-	sb.corner_radius_bottom_right = 24
-	return sb
-
-func _button(text: String) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(280, 54)
-	b.add_theme_font_size_override("font_size", 22)
-	b.add_theme_stylebox_override("normal", _style("#ffffff"))
-	return b
-
 func _build() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color("#b6efb2")
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	var bg := ColorRect.new(); bg.color = Color("#22422d"); bg.set_anchors_preset(Control.PRESET_FULL_RECT); add_child(bg)
+	var panel := Panel.new(); panel.position = Vector2(250, 60); panel.size = Vector2(460, 420); panel.add_theme_stylebox_override("panel", UITheme.panel_style()); add_child(panel)
+	var title := Label.new(); title.text="Options"; title.position=Vector2(0,30); title.size=Vector2(460,45); title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; title.add_theme_font_size_override("font_size",36); title.add_theme_color_override("font_color",UITheme.INK); panel.add_child(title)
+	sound_label = _row(panel, 105, "Sound", _sound_text(), _toggle_sound)
+	touch_label = _row(panel, 170, "Touch Controls", SettingsManager.touch_controls_mode, _cycle_touch)
+	var hint := Label.new(); hint.text="Touch modes: Auto for phones, Always for testing, Off for desktop capture."; hint.position=Vector2(55,235); hint.size=Vector2(350,55); hint.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; hint.add_theme_font_size_override("font_size",16); hint.add_theme_color_override("font_color",Color("#54624f")); panel.add_child(hint)
+	var back := _button("Back", Vector2(130, 330), _back); panel.add_child(back)
 
-	var card := PanelContainer.new()
-	card.position = Vector2(285, 72)
-	card.size = Vector2(390, 390)
-	card.add_theme_stylebox_override("panel", _style("#fafff3"))
-	add_child(card)
+func _row(parent: Control, y: int, name: String, value: String, cb: Callable) -> Label:
+	var l := Label.new(); l.text=name; l.position=Vector2(55,y); l.size=Vector2(170,40); l.add_theme_font_size_override("font_size",22); l.add_theme_color_override("font_color",UITheme.INK); parent.add_child(l)
+	var b := _button(value, Vector2(240,y-4), cb); parent.add_child(b)
+	return b.get_child(0) if b.get_child_count()>0 else l
 
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 16)
-	card.add_child(box)
-
-	var title := Label.new()
-	title.text = "Options"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 44)
-	title.add_theme_color_override("font_color", Color("#244f2f"))
-	box.add_child(title)
-
-	var sound := _button("Sound: %s" % ["ON" if GameState.sound_enabled else "OFF"])
-	sound.pressed.connect(func():
-		GameState.toggle_sound()
-		AudioManager.play_click()
-		sound.text = "Sound: %s" % ["ON" if GameState.sound_enabled else "OFF"]
-	)
-	box.add_child(sound)
-
-	var info := Label.new()
-	info.text = "Mobile controls are enabled in-game. Use the on-screen D-pad and action button."
-	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info.custom_minimum_size = Vector2(300, 72)
-	info.add_theme_font_size_override("font_size", 17)
-	box.add_child(info)
-
-	var back := _button("Back")
-	back.pressed.connect(func():
-		AudioManager.play_click()
-		get_parent().go_to_title()
-	)
-	box.add_child(back)
+func _button(text:String,pos:Vector2,cb:Callable)->Button:
+	var b:=Button.new(); b.text=text; b.position=pos; b.size=Vector2(190,44); b.add_theme_font_size_override("font_size",18); b.add_theme_color_override("font_color",UITheme.INK); b.add_theme_stylebox_override("normal",UITheme.button_style()); b.pressed.connect(cb); return b
+func _sound_text()->String: return "ON" if SettingsManager.sound_enabled else "OFF"
+func _toggle_sound()->void: SettingsManager.toggle_sound(); get_tree().reload_current_scene()
+func _cycle_touch()->void: SettingsManager.cycle_touch_mode(); get_tree().reload_current_scene()
+func _back()->void: AudioManager.play_click(); get_parent().go_to_title()

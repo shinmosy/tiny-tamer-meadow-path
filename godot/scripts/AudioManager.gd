@@ -24,7 +24,7 @@ func _create_player(path: String) -> AudioStreamPlayer:
 	return player
 
 func _can_play() -> bool:
-	return GameState.sound_enabled
+	return SettingsManager.sound_enabled
 
 func play_click() -> void:
 	if _can_play(): click_player.play()

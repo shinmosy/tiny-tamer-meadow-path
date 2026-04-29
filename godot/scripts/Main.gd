@@ -78,8 +78,8 @@ func go_to_options() -> void:
 func go_to_dex() -> void:
 	fade_switch_to("res://scenes/MonsterDex.tscn", "Opening Meadow Dex...")
 
-func go_to_overworld() -> void:
-	fade_switch_to("res://scenes/Overworld.tscn", "Entering Meadow Path...")
+func go_to_overworld(from_save := false) -> void:
+	fade_switch_to("res://scenes/Overworld.tscn", "Entering Wild Routes...")
 
 func go_to_battle(biome := "") -> void:
 	GameState.choose_random_enemy(biome)

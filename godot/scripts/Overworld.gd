@@ -139,7 +139,7 @@ func _touch_button(text: String, pos: Vector2, dir: Vector2, layer: CanvasLayer)
 	layer.add_child(b); return b
 
 func _build_touch_controls() -> void:
-	if not _is_mobile_device():
+	if not SettingsManager.should_show_touch_controls():
 		return
 	var layer := CanvasLayer.new(); layer.layer = 10; add_child(layer)
 	_touch_button("▲", Vector2(90,360), Vector2.UP, layer); _touch_button("◀", Vector2(34,414), Vector2.LEFT, layer); _touch_button("▶", Vector2(146,414), Vector2.RIGHT, layer); _touch_button("▼", Vector2(90,468), Vector2.DOWN, layer)
