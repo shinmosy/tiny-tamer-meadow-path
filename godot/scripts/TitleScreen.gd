@@ -47,6 +47,7 @@ func _build_screen() -> void:
 	card.add_child(buttons)
 	if SaveManager.has_save(): buttons.add_child(_button("Continue", _on_continue))
 	buttons.add_child(_button("Start Adventure", _on_start))
+	buttons.add_child(_button("Practice Battle", _on_practice))
 	buttons.add_child(_button("Meadow Dex", _on_dex))
 	buttons.add_child(_button("Options", _on_options))
 	buttons.add_child(_button("Credits", _on_credits))
@@ -81,6 +82,10 @@ func _on_continue() -> void:
 func _on_start() -> void:
 	AudioManager.play_click()
 	get_parent().go_to_overworld(false)
+func _on_practice() -> void:
+	AudioManager.play_click()
+	get_parent().go_to_practice_battle()
+
 func _on_dex() -> void:
 	AudioManager.play_click()
 	get_parent().go_to_dex()

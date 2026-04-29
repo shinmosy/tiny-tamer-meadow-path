@@ -1,339 +1,225 @@
 extends Control
 
-var log_label: Label
-var player_hp_label: Label
-var enemy_hp_label: Label
-var player_hp_bar: ProgressBar
-var enemy_hp_bar: ProgressBar
 var player_mon: TextureRect
 var enemy_mon: TextureRect
-var flash_overlay: ColorRect
-var buttons: Array[Button] = []
+var player_card: Panel
+var enemy_card: Panel
+var player_hp_bar: ProgressBar
+var enemy_hp_bar: ProgressBar
+var player_info: Label
+var enemy_info: Label
+var battle_log: Label
+var command_box: VBoxContainer
+var submenu_box: VBoxContainer
+var action_locked := false
+var player_status := "Ready"
+var enemy_status := "Ready"
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_build_ui()
-	_update_labels("A wild %s appeared!" % GameState.enemy_name)
+	GameState.apply_companion_stats()
+	_build_battle()
+	_update_cards("A wild %s appeared!" % GameState.enemy_name)
 
+func _bg_color() -> Color:
+	match GameState.enemy_biome:
+		"Forest": return Color("#426f45")
+		"River": return Color("#4d9cc8")
+		"Mountain": return Color("#9b8060")
+		"Boss": return Color("#55405a")
+		_: return Color("#8bcf7b")
 
-func _create_stylebox(bg_color: Color, radius: int = 12) -> StyleBoxFlat:
-	var sb = StyleBoxFlat.new()
-	sb.bg_color = bg_color
-	sb.corner_radius_top_left = radius
-	sb.corner_radius_top_right = radius
-	sb.corner_radius_bottom_left = radius
-	sb.corner_radius_bottom_right = radius
-	sb.shadow_color = Color(0, 0, 0, 0.15)
-	sb.shadow_size = 4
-	sb.shadow_offset = Vector2(0, 2)
-	return sb
+func _build_battle() -> void:
+	var bg := ColorRect.new(); bg.color = _bg_color(); bg.set_anchors_preset(Control.PRESET_FULL_RECT); add_child(bg)
+	var horizon := ColorRect.new(); horizon.color = Color("#fff0b8", 0.18); horizon.position=Vector2(0,0); horizon.size=Vector2(960,245); add_child(horizon)
+	var ground1 := ColorRect.new(); ground1.color = Color("#203528", 0.12); ground1.position=Vector2(115,370); ground1.size=Vector2(245,42); add_child(ground1)
+	var ground2 := ColorRect.new(); ground2.color = Color("#203528", 0.12); ground2.position=Vector2(635,184); ground2.size=Vector2(230,40); add_child(ground2)
 
-func _style_button(btn: Button) -> void:
-	btn.add_theme_stylebox_override("normal", _create_stylebox(Color("#ffffff")))
-	btn.add_theme_stylebox_override("hover", _create_stylebox(Color("#f4f4f4")))
-	btn.add_theme_stylebox_override("pressed", _create_stylebox(Color("#e0e0e0")))
-	btn.add_theme_stylebox_override("disabled", _create_stylebox(Color("#cccccc")))
-	btn.add_theme_color_override("font_color", Color("#333333"))
-	btn.add_theme_color_override("font_hover_color", Color("#111111"))
-	btn.add_theme_color_override("font_pressed_color", Color("#000000"))
-	btn.add_theme_color_override("font_disabled_color", Color("#888888"))
-	btn.add_theme_font_size_override("font_size", 18)
+	enemy_card = _status_card(Vector2(30,28), true); add_child(enemy_card)
+	player_card = _status_card(Vector2(590,315), false); add_child(player_card)
 
-func _style_hp_bar(bar: ProgressBar, fill_color: Color) -> void:
-	bar.add_theme_stylebox_override("background", _create_stylebox(Color("#444444", 0.6), 8))
-	bar.add_theme_stylebox_override("fill", _create_stylebox(fill_color, 8))
+	player_mon = TextureRect.new(); player_mon.texture = load(GameState.get_enemy_sprite(GameState.active_companion)); player_mon.position=Vector2(120,245); player_mon.size=Vector2(190,190); player_mon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED; add_child(player_mon)
+	enemy_mon = TextureRect.new(); enemy_mon.texture = load(GameState.enemy_sprite); enemy_mon.position=Vector2(635,65); enemy_mon.size=Vector2(175,175); enemy_mon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED; add_child(enemy_mon)
+	_start_idle(player_mon, 7, 1.2); _start_idle(enemy_mon, -6, 1.15)
 
-func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color("#bde7ff")
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	var log_panel := Panel.new(); log_panel.position=Vector2(28,410); log_panel.size=Vector2(555,108); log_panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff1cf", .96), Color("#2f5d35"), 16)); add_child(log_panel)
+	battle_log = Label.new(); battle_log.position=Vector2(18,16); battle_log.size=Vector2(518,76); battle_log.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; battle_log.add_theme_font_size_override("font_size",19); battle_log.add_theme_color_override("font_color", UITheme.INK); log_panel.add_child(battle_log)
 
-	var ground_left := ColorRect.new()
-	ground_left.color = Color("#7ccf70")
-	ground_left.position = Vector2(105, 332)
-	ground_left.size = Vector2(240, 38)
-	add_child(ground_left)
+	var menu_panel := Panel.new(); menu_panel.position=Vector2(610,410); menu_panel.size=Vector2(320,108); menu_panel.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff6da", .96), Color("#2f5d35"), 16)); add_child(menu_panel)
+	command_box = VBoxContainer.new(); command_box.position=Vector2(18,12); command_box.size=Vector2(135,86); command_box.add_theme_constant_override("separation", 6); menu_panel.add_child(command_box)
+	submenu_box = VBoxContainer.new(); submenu_box.position=Vector2(165,12); submenu_box.size=Vector2(135,86); submenu_box.add_theme_constant_override("separation", 6); menu_panel.add_child(submenu_box)
+	_show_commands()
 
-	var ground_right := ColorRect.new()
-	ground_right.color = Color("#7ccf70")
-	ground_right.position = Vector2(642, 222)
-	ground_right.size = Vector2(240, 38)
-	add_child(ground_right)
+func _status_card(pos: Vector2, enemy: bool) -> Panel:
+	var p := Panel.new(); p.position=pos; p.size=Vector2(335,90); p.add_theme_stylebox_override("panel", UITheme.panel_style(Color("#fff2cf", .95), Color("#24452d"), 16))
+	var info := Label.new(); info.position=Vector2(16,10); info.size=Vector2(300,26); info.add_theme_font_size_override("font_size",18); info.add_theme_color_override("font_color", UITheme.INK); p.add_child(info)
+	var bar := ProgressBar.new(); bar.position=Vector2(16,42); bar.size=Vector2(300,18); bar.show_percentage=false; p.add_child(bar)
+	var status := Label.new(); status.name="Status"; status.position=Vector2(16,63); status.size=Vector2(300,20); status.add_theme_font_size_override("font_size",13); status.add_theme_color_override("font_color", Color("#57614d")); p.add_child(status)
+	if enemy:
+		enemy_info=info; enemy_hp_bar=bar
+	else:
+		player_info=info; player_hp_bar=bar
+	return p
 
-	player_mon = TextureRect.new()
-	var companion_sprite := "res://assets/sprites/spriglet.svg" if GameState.active_companion == "Spriglet" else GameState.get_enemy_sprite(GameState.active_companion)
-	player_mon.texture = load(companion_sprite)
-	player_mon.position = Vector2(120, 210)
-	player_mon.size = Vector2(190, 155)
-	player_mon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	add_child(player_mon)
+func _button(text: String, cb: Callable) -> Button:
+	var b:=Button.new(); b.text=text; b.custom_minimum_size=Vector2(130,26); b.add_theme_font_size_override("font_size",14); b.add_theme_color_override("font_color", UITheme.INK); b.add_theme_stylebox_override("normal", UITheme.button_style(Color("#f3d58a"), Color("#2f5d35"))); b.pressed.connect(cb); return b
 
-	enemy_mon = TextureRect.new()
-	enemy_mon.texture = load(GameState.enemy_sprite)
-	enemy_mon.position = Vector2(660, 92)
-	enemy_mon.size = Vector2(180, 150)
-	enemy_mon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	add_child(enemy_mon)
-	_start_idle_motion(player_mon, 7, 1.3)
-	_start_idle_motion(enemy_mon, -6, 1.1)
+func _clear_box(box: VBoxContainer) -> void:
+	for c in box.get_children(): c.queue_free()
 
-	var player_name := Label.new()
-	player_name.text = "%s CP %d  |  Orbs: %d" % [GameState.active_companion, GameState.player_cp, GameState.meadow_orbs]
-	player_name.position = Vector2(115, 230)
-	player_name.add_theme_font_size_override("font_size", 24)
-	add_child(player_name)
+func _show_commands() -> void:
+	_clear_box(command_box); _clear_box(submenu_box)
+	command_box.add_child(_button("Fight", _show_fight))
+	command_box.add_child(_button("Team", _show_team))
+	command_box.add_child(_button("Bag", _show_bag))
+	submenu_box.add_child(_button("Capture", _on_capture))
+	submenu_box.add_child(_button("Run", _on_run))
 
-	player_hp_label = Label.new()
-	player_hp_label.position = Vector2(145, 360)
-	player_hp_label.add_theme_font_size_override("font_size", 22)
-	add_child(player_hp_label)
+func _show_fight() -> void:
+	_clear_box(submenu_box)
+	submenu_box.add_child(_button("Tackle", func(): _player_move("Tackle", GameState.player_attack, "Meadow", "basic")))
+	submenu_box.add_child(_button(GameState.player_skill_name, func(): _player_move(GameState.player_skill_name, GameState.player_skill_damage, GameState.get_monster_data(GameState.active_companion).get("type","Meadow"), "skill")))
+	submenu_box.add_child(_button("Guard", _guard))
+	submenu_box.add_child(_button("Back", _show_commands))
 
-	player_hp_bar = ProgressBar.new()
-	player_hp_bar.position = Vector2(145, 388)
-	player_hp_bar.size = Vector2(185, 18)
-	player_hp_bar.max_value = GameState.player_max_hp
-	player_hp_bar.show_percentage = false
-	_style_hp_bar(player_hp_bar, Color("#34c759"))
-	add_child(player_hp_bar)
+func _show_team() -> void:
+	_clear_box(submenu_box)
+	for name in GameState.team:
+		submenu_box.add_child(_button(name, func(n=name): _switch_to(n)))
+	submenu_box.add_child(_button("Back", _show_commands))
 
-	var enemy_name := Label.new()
-	enemy_name.text = "%s CP %d" % [GameState.enemy_name, GameState.enemy_cp]
-	enemy_name.position = Vector2(685, 105)
-	enemy_name.add_theme_font_size_override("font_size", 24)
-	add_child(enemy_name)
+func _show_bag() -> void:
+	_clear_box(submenu_box)
+	submenu_box.add_child(_button("Heal Berry", _use_heal))
+	submenu_box.add_child(_button("Guard Bark", _guard))
+	submenu_box.add_child(_button("Back", _show_commands))
+	battle_log.text = "Bag: Heal Berry restores 15 HP. Guard Bark reduces next hit."
 
-	enemy_hp_label = Label.new()
-	enemy_hp_label.position = Vector2(685, 235)
-	enemy_hp_label.add_theme_font_size_override("font_size", 22)
-	add_child(enemy_hp_label)
+func _switch_to(name: String) -> void:
+	if action_locked: return
+	if GameState.set_active_companion(name):
+		player_mon.texture = load(GameState.get_enemy_sprite(GameState.active_companion))
+		_update_cards("Go, %s!" % name)
+		_enemy_turn()
 
-	enemy_hp_bar = ProgressBar.new()
-	enemy_hp_bar.position = Vector2(685, 263)
-	enemy_hp_bar.size = Vector2(185, 18)
-	enemy_hp_bar.max_value = GameState.enemy_max_hp
-	enemy_hp_bar.show_percentage = false
-	_style_hp_bar(enemy_hp_bar, Color("#ff3b30"))
-	add_child(enemy_hp_bar)
+func _use_heal() -> void:
+	if action_locked: return
+	GameState.player_hp = min(GameState.player_max_hp, GameState.player_hp + 15)
+	AudioManager.play_heal(); _update_cards("%s used Heal Berry. +15 HP." % GameState.active_companion)
+	_enemy_turn()
 
-	var panel := Panel.new()
-	panel.add_theme_stylebox_override("panel", _create_stylebox(Color("#ffffff", 0.95), 16))
-	panel.position = Vector2(55, 405)
-	panel.size = Vector2(850, 105)
-	add_child(panel)
+func _guard() -> void:
+	if action_locked: return
+	player_status = "Guarded"
+	_update_cards("%s braced behind a field guard." % GameState.active_companion)
+	_enemy_turn()
 
-	log_label = Label.new()
-	log_label.position = Vector2(80, 420)
-	log_label.size = Vector2(470, 72)
-	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	log_label.add_theme_font_size_override("font_size", 20)
-	log_label.add_theme_color_override("font_color", Color("#222222"))
-	add_child(log_label)
+func _type_multiplier(move_type: String, target_type: String) -> float:
+	var strong := {"Meadow":"Water", "Water":"Stone", "Stone":"Bloom", "Bloom":"Forest", "Forest":"Meadow", "Ember":"Forest"}
+	if strong.get(move_type, "") == target_type: return 1.25
+	if strong.get(target_type, "") == move_type: return 0.8
+	return 1.0
 
-	var actions := GridContainer.new()
-	actions.columns = 2
-	actions.position = Vector2(610, 412)
-	actions.size = Vector2(270, 90)
-	add_child(actions)
+func _effect_text(mult: float) -> String:
+	if mult > 1.0: return " Super effective!"
+	if mult < 1.0: return " Not very effective..."
+	return ""
 
-	for action in ["Attack", "Skill", "Heal", "Capture", "Run"]:
-		var btn := Button.new()
-		btn.text = action
-		btn.custom_minimum_size = Vector2(120, 34)
-		_style_button(btn)
-		btn.pressed.connect(_on_action.bind(action))
-		buttons.append(btn)
-		actions.add_child(btn)
+func _player_move(move_name: String, power: int, move_type: String, kind: String) -> void:
+	if action_locked: return
+	action_locked = true
+	var mult := _type_multiplier(move_type, GameState.enemy_type)
+	var dmg: int = max(1, int(power * mult) + randi_range(-1, 2))
+	GameState.enemy_hp = max(0, GameState.enemy_hp - dmg)
+	AudioManager.play_hit(); _lunge(player_mon, Vector2(35,-18)); _shake(enemy_mon)
+	_update_cards("%s used %s. %d damage.%s" % [GameState.active_companion, move_name, dmg, _effect_text(mult)])
+	await get_tree().create_timer(0.65).timeout
+	if GameState.enemy_hp <= 0:
+		_win_battle(); return
+	action_locked = false
+	_enemy_turn()
 
-	flash_overlay = ColorRect.new()
-	flash_overlay.color = Color(1, 1, 1, 0)
-	flash_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	flash_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(flash_overlay)
-
-func _on_action(action: String) -> void:
-	_set_buttons_disabled(true)
-	match action:
-		"Attack":
-			AudioManager.play_click()
-			await _lunge(player_mon, Vector2(28, -10))
-			AudioManager.play_hit()
-			GameState.damage_enemy(GameState.player_attack)
-			_spawn_float_text("-%d" % GameState.player_attack, enemy_mon.global_position + Vector2(90, 20), Color("#ff4d4d"))
-			_shake(enemy_mon)
-			_update_labels("%s used Tackle" % GameState.active_companion + " for %d damage!" % GameState.player_attack)
-			await _after_player_action()
-		"Skill":
-			AudioManager.play_click()
-			AudioManager.play_skill()
-			await _flash(Color(0.65, 1.0, 0.55, 0.32))
-			AudioManager.play_hit()
-			GameState.damage_enemy(GameState.player_skill_damage)
-			_spawn_float_text("-%d" % GameState.player_skill_damage, enemy_mon.global_position + Vector2(90, 20), Color("#42c968"))
-			_shake(enemy_mon)
-			_update_labels("%s used %s for %d damage!" % [GameState.active_companion, GameState.player_skill_name, GameState.player_skill_damage])
-			await _after_player_action()
-		"Heal":
-			AudioManager.play_click()
-			AudioManager.play_heal()
-			GameState.heal_player(10)
-			_spawn_float_text("+10", player_mon.global_position + Vector2(90, 20), Color("#40c96b"))
-			_update_labels("%s recovered 10 HP!" % GameState.active_companion)
-			await _after_player_action()
-		"Capture":
-			AudioManager.play_click()
-			if GameState.meadow_orbs <= 0:
-				_update_labels("No Meadow Orbs left!")
-				await get_tree().create_timer(1.0).timeout
-				_set_buttons_disabled(false)
-				return
-			var result := GameState.try_capture()
-			_update_labels("You threw a Meadow Orb!\nOrbs left: %d" % GameState.meadow_orbs)
-			var captured = result.begins_with("Gotcha")
-			await _play_capture_anim(captured)
-			if captured:
-				AudioManager.play_capture()
-				GameState.last_battle_message = result
-				await get_tree().create_timer(1.0).timeout
-				get_parent().go_to_overworld()
-			else:
-				_update_labels(result)
-				await get_tree().create_timer(1.0).timeout
-				await _after_player_action(false)
-		"Run":
-			AudioManager.play_click()
-			_update_labels("You safely ran back to Meadow Path.")
-			await get_tree().create_timer(0.7).timeout
-			get_parent().go_to_overworld()
-
-func _after_player_action(check_win: bool = true) -> void:
-	_update_hp_only()
-	if check_win and GameState.enemy_hp <= 0:
-		var exp_message := GameState.gain_exp(12)
-		GameState.restock_orbs(1)
-		GameState.last_battle_message = "%s fainted! %s +1 Meadow Orb." % [GameState.enemy_name, exp_message]
-		_update_labels(GameState.last_battle_message)
-		await get_tree().create_timer(1.2).timeout
-		get_parent().go_to_overworld()
-		return
+func _enemy_turn() -> void:
+	action_locked = true
 	await get_tree().create_timer(0.55).timeout
-	await _lunge(enemy_mon, Vector2(-24, 12))
-	AudioManager.play_hit()
-	GameState.damage_player(GameState.enemy_attack)
-	_spawn_float_text("-%d" % GameState.enemy_attack, player_mon.global_position + Vector2(90, 20), Color("#ff4d4d"))
-	_shake(player_mon)
-	_update_labels("%s used %s for %d damage!" % [GameState.enemy_name, GameState.enemy_skill_name, GameState.enemy_attack])
-	_update_hp_only()
+	var enemy_type := GameState.enemy_type
+	var player_type: String = str(GameState.get_monster_data(GameState.active_companion).get("type", "Meadow"))
+	var use_skill := GameState.enemy_hp < GameState.enemy_max_hp * 0.45 or randf() < 0.55
+	var power := GameState.enemy_skill_damage if use_skill else GameState.enemy_attack
+	var move := GameState.enemy_skill_name if use_skill else "Wild Tackle"
+	var mult := _type_multiplier(enemy_type, player_type)
+	var dmg: int = max(1, int(power * mult) + randi_range(-1, 2))
+	if player_status == "Guarded":
+		dmg = int(max(1, dmg * 0.55)); player_status = "Ready"
+	GameState.player_hp = max(0, GameState.player_hp - dmg)
+	AudioManager.play_hit(); _lunge(enemy_mon, Vector2(-35,18)); _shake(player_mon)
+	_update_cards("%s used %s. %d damage.%s" % [GameState.enemy_name, move, dmg, _effect_text(mult)])
+	await get_tree().create_timer(0.65).timeout
 	if GameState.player_hp <= 0:
-		await get_tree().create_timer(1.0).timeout
-		_update_labels("%s fainted. You rushed back and recovered." % GameState.active_companion)
-		GameState.reset_battle()
-		await get_tree().create_timer(1.0).timeout
-		get_parent().go_to_overworld()
-		return
-	_set_buttons_disabled(false)
+		_defeat(); return
+	action_locked = false
+	_show_commands()
 
-func _start_idle_motion(target: Control, amount: float, duration: float) -> void:
+func _on_capture() -> void:
+	if action_locked: return
+	action_locked = true
+	AudioManager.play_throw(); _flash(Color("#fff6a8", .36))
+	var result := GameState.try_capture()
+	_update_cards(result)
+	await get_tree().create_timer(1.0).timeout
+	if result.begins_with("Gotcha"):
+		GameState.last_battle_message = result
+		SaveManager.save_game()
+		get_parent().go_to_overworld(true)
+	else:
+		action_locked = false
+		_enemy_turn()
+
+func _on_run() -> void:
+	GameState.last_battle_message = "You returned to the route safely."
+	SaveManager.save_game()
+	get_parent().go_to_overworld(true)
+
+func _win_battle() -> void:
+	var msg := GameState.win_reward()
+	GameState.last_battle_message = "%s defeated! %s" % [GameState.enemy_name, msg]
+	_update_cards(GameState.last_battle_message)
+	SaveManager.save_game()
+	await get_tree().create_timer(1.0).timeout
+	get_parent().go_to_overworld(true)
+
+func _defeat() -> void:
+	GameState.player_hp = GameState.player_max_hp
+	GameState.last_battle_message = "%s fainted. Camp Keeper helped you recover." % GameState.active_companion
+	SaveManager.save_game()
+	await get_tree().create_timer(1.0).timeout
+	get_parent().go_to_overworld(true)
+
+func _update_cards(text: String) -> void:
+	battle_log.text = text
+	player_info.text = "%s CP %d  %s" % [GameState.active_companion, GameState.player_cp, GameState.get_monster_data(GameState.active_companion).get("type","Meadow")]
+	enemy_info.text = "%s CP %d  %s" % [GameState.enemy_name, GameState.enemy_cp, GameState.enemy_type]
+	player_hp_bar.max_value = GameState.player_max_hp; player_hp_bar.value = GameState.player_hp
+	enemy_hp_bar.max_value = GameState.enemy_max_hp; enemy_hp_bar.value = GameState.enemy_hp
+	player_card.get_node("Status").text = "HP %d/%d | %s" % [GameState.player_hp, GameState.player_max_hp, player_status]
+	enemy_card.get_node("Status").text = "HP %d/%d | %s biome" % [GameState.enemy_hp, GameState.enemy_max_hp, GameState.enemy_biome]
+
+func _start_idle(target: Control, amount: float, duration: float) -> void:
 	var start_y := target.position.y
-	var tween := create_tween().set_loops()
-	tween.tween_property(target, "position:y", start_y + amount, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(target, "position:y", start_y, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var t := create_tween().set_loops()
+	t.tween_property(target, "position:y", start_y + amount, duration).set_trans(Tween.TRANS_SINE)
+	t.tween_property(target, "position:y", start_y, duration).set_trans(Tween.TRANS_SINE)
 
 func _lunge(target: Control, offset: Vector2) -> void:
 	var start := target.position
-	var tween := create_tween()
-	tween.tween_property(target, "position", start + offset, 0.08).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(target, "position", start, 0.12).set_trans(Tween.TRANS_BACK)
-	await tween.finished
+	var t := create_tween(); t.tween_property(target, "position", start + offset, 0.12); t.tween_property(target, "position", start, 0.16)
 
 func _shake(target: Control) -> void:
 	var start := target.position
-	var tween := create_tween()
-	for offset in [Vector2(8, 0), Vector2(-8, 0), Vector2(5, 0), Vector2(-5, 0), Vector2.ZERO]:
-		tween.tween_property(target, "position", start + offset, 0.035)
+	var t := create_tween()
+	for i in range(4): t.tween_property(target, "position:x", start.x + (6 if i % 2 == 0 else -6), 0.045)
+	t.tween_property(target, "position", start, 0.05)
 
 func _flash(color: Color) -> void:
-	flash_overlay.color = color
-	var tween := create_tween()
-	tween.tween_property(flash_overlay, "color:a", 0.0, 0.22)
-	await tween.finished
-
-func _spawn_float_text(text: String, pos: Vector2, color: Color) -> void:
-	var label := Label.new()
-	label.text = text
-	label.position = pos
-	label.add_theme_font_size_override("font_size", 26)
-	label.add_theme_color_override("font_color", color)
-	add_child(label)
-	var tween := create_tween()
-	tween.tween_property(label, "position", pos + Vector2(0, -42), 0.55)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.55)
-	tween.finished.connect(label.queue_free)
-
-func _update_labels(message: String) -> void:
-	log_label.text = message
-	_update_hp_only()
-
-func _update_hp_only() -> void:
-	player_hp_label.text = "HP: %d / %d" % [GameState.player_hp, GameState.player_max_hp]
-	enemy_hp_label.text = "HP: %d / %d" % [GameState.enemy_hp, GameState.enemy_max_hp]
-	player_hp_bar.value = GameState.player_hp
-	enemy_hp_bar.value = GameState.enemy_hp
-
-func _set_buttons_disabled(value: bool) -> void:
-	for btn in buttons:
-		btn.disabled = value
-
-func _play_capture_anim(success: bool) -> void:
-	AudioManager.play_throw()
-	var orb := TextureRect.new()
-	orb.texture = load("res://assets/sprites/orb.svg")
-	orb.size = Vector2(40, 40)
-	orb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	orb.position = player_mon.position + Vector2(50, 50)
-	orb.pivot_offset = Vector2(20, 20)
-	add_child(orb)
-
-	var target_pos = enemy_mon.position + Vector2(70, 50)
-	var t1 := create_tween().set_parallel(true)
-	t1.tween_property(orb, "position:x", target_pos.x, 0.6).set_trans(Tween.TRANS_LINEAR)
-	t1.tween_property(orb, "position:y", target_pos.y - 100, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	t1.tween_property(orb, "rotation_degrees", 360.0, 0.6)
-	await get_tree().create_timer(0.3).timeout
-	var t2 := create_tween()
-	t2.tween_property(orb, "position:y", target_pos.y, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	await t2.finished
-
-	AudioManager.play_skill()
-	var t3 := create_tween()
-	t3.tween_property(enemy_mon, "scale", Vector2.ZERO, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	await t3.finished
-	enemy_mon.visible = false
-
-	var ground_y = enemy_mon.position.y + 110
-	var t4 := create_tween()
-	t4.tween_property(orb, "position:y", ground_y, 0.2).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	await t4.finished
-
-	var shakes = 3 if success else randi() % 3 + 1
-	for i in range(shakes):
-		await get_tree().create_timer(0.7).timeout
-		var t5 := create_tween()
-		t5.tween_property(orb, "rotation_degrees", 25.0, 0.08)
-		t5.tween_property(orb, "rotation_degrees", -25.0, 0.16)
-		t5.tween_property(orb, "rotation_degrees", 0.0, 0.08)
-		AudioManager.play_click()
-		await t5.finished
-
-	await get_tree().create_timer(0.6).timeout
-
-	if not success:
-		orb.queue_free()
-		enemy_mon.visible = true
-		AudioManager.play_hit()
-		var t6 := create_tween()
-		t6.tween_property(enemy_mon, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		await t6.finished
-	else:
-		_flash(Color(1.0, 0.9, 0.35, 0.4))
-		_spawn_float_text("Gotcha!", orb.global_position + Vector2(20, -30), Color("#ffd84d"))
+	var r := ColorRect.new(); r.color = color; r.set_anchors_preset(Control.PRESET_FULL_RECT); add_child(r)
+	var t := create_tween(); t.tween_property(r, "color:a", 0.0, 0.35); t.finished.connect(func(): r.queue_free())
