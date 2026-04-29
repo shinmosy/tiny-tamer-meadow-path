@@ -83,6 +83,6 @@ The `public/` folder contains the exported static web build. It can be deployed 
 
 ## Status
 
-Prototype version: `v0.0.6`
+Prototype version: final Godot engine archive
 
-This is an active prototype and may continue evolving with quests, inventory, more maps, more monsters, save/load, and deeper battle mechanics.
+Tiny Tamer: Meadow Path is now ended/archived as an engine prototype. The project remains as a playable record of the experiment and the lessons learned: keep future game foundations smaller, cleaner, and focused around one strong core loop before expanding scope.
