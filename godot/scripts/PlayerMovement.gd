@@ -10,6 +10,6 @@ func _physics_process(_delta: float) -> void:
 		input_vector = GameState.mobile_move_vector
 	velocity = input_vector.normalized() * speed
 	move_and_slide()
-	position.x = clamp(position.x, 20.0, 1580.0)
-	position.y = clamp(position.y, 20.0, 1080.0)
+	position.x = clamp(position.x, 20.0, 2480.0)
+	position.y = clamp(position.y, 20.0, 1480.0)
 	GameState.last_player_position = position
