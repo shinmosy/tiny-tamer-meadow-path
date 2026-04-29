@@ -1,0 +1,20 @@
+.godot/
+.godot/editor/
+*.tmp
+*.log
+.DS_Store
+node_modules/
+# packaged exports
+*.tar.gz
+*.zip
+# failed/large recording attempts
+*.mp4
+# keep exported web build tracked for demo/review
+!public/index.html
+!public/index.js
+!public/index.wasm
+!public/index.pck
+!public/index.audio.worklet.js
+!public/index.icon.png
+!public/index.apple-touch-icon.png
+!public/index.png

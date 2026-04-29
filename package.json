@@ -1,0 +1,8 @@
+{
+  "name": "tiny-tamer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "python3 -m http.server 8000 -d public"
+  }
+}

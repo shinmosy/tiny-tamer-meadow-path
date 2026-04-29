@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Base outline & white bottom -->
+  <circle cx="50" cy="50" r="48" fill="#ffffff" stroke="#222" stroke-width="4"/>
+  <!-- Top red/orange half -->
+  <path d="M 2 50 A 48 48 0 0 1 98 50 Z" fill="#ff6b6b" stroke="#222" stroke-width="3"/>
+  <!-- Center band -->
+  <rect x="0" y="46" width="100" height="8" fill="#222"/>
+  <!-- Outer button ring -->
+  <circle cx="50" cy="50" r="16" fill="#222"/>
+  <!-- Inner button -->
+  <circle cx="50" cy="50" r="11" fill="#ffffff"/>
+  <!-- Inner glow/reflection -->
+  <circle cx="50" cy="50" r="6" fill="#e0e0e0"/>
+  <!-- Top reflection highlight -->
+  <path d="M 20 25 Q 50 5 80 25 A 35 35 0 0 0 20 25 Z" fill="#ffffff" opacity="0.3"/>
+</svg>
